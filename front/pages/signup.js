@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Form, Input, Button, Checkbox } from 'antd';
-import { signUpAction } from '../reducers/user';
-import { useDispatch } from 'react-redux';
+import { SIGN_UP_REQUEST } from '../reducers/user';
+import { useDispatch, useSelector } from 'react-redux';
+import Router from 'next/router';
 
 export const useInput = (initValue = null) => {
     const [value, setter] = useState(initValue);
@@ -24,6 +25,13 @@ const Signup = () => {
     const [passwordError, setPasswordError] = useState(false);
     const [termError, setTermError] = useState(false);
     const dispatch = useDispatch();
+    const {me, isSigningUp } = useSelector(state => state.user)
+
+    useEffect(() => {
+        if (me) {
+            Router.push('/')  //로그인하면 회원가입 페이지가 메인페이지로 바뀜
+        }
+    }, [me && me.id])
 
     const onSubmit = useCallback((e) => {
         e.preventDefault();
@@ -33,10 +41,13 @@ const Signup = () => {
         if (!term) {
             return setTermError(true);
         }
-        dispatch(signUpAction({
-            id,
-            password,
-            nickname
+        dispatch(({
+            type: SIGN_UP_REQUEST,
+            data: {
+                id,
+                password,
+                nickname
+            }
         }))
     }, [password, passwordCheck, term]);
 
@@ -93,7 +104,7 @@ const Signup = () => {
                     {termError && <div style={{ color: 'red' }}>약관에 동의 하셔야 합니다.</div>}
                 </div>
                 <div style={{ marginTop: 10 }}>
-                    <Button type="primary" htmlType="submit">가입하기</Button>
+                    <Button type="primary" htmlType="submit" loading={isSigningUp}>가입하기</Button>
                 </div>
             </Form>
         </>

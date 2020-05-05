@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PostForm from '../components/PostForm';
 import PostCard from '../components/PostCard';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 const Home = () => {
     const isLoggedIn = useSelector(state => state.user.isLoggedIn);
     const mainPosts = useSelector(state => state.post.mainPosts);
+    const dispatch = useDispatch()
 
+    useEffect(() => {
+
+    }, [])
     return (
         <>
             <div>
