@@ -18,26 +18,6 @@ export const initalState = {
     commentAdded: false,
 }
 
-const dummyPost = {
-    id: 2,
-    User: {
-        id: 1,
-        nickname: '제로초'
-    },
-    content: '나는 더미입니다.',
-    Comments: [],
-}
-
-const dummyComment = {
-    id: 1,
-    User: {
-        id: 1,
-        nickname: '보노보노',
-    },
-    createAt: new Date(),
-    content: '더미 댓글입니다.'
-}
-
 export const LOAD_MAIN_POSTS_REQUEST = 'LOAD_MAIN_POSTS_REQUEST';
 export const LOAD_MAIN_POSTS_SUCCESS = 'LOAD_MAIN_POSTS_SUCCESS';
 export const LOAD_MAIN_POSTS_FAILURE = 'LOAD_MAIN_POSTS_FAILURE';
@@ -100,7 +80,7 @@ export default (state = initalState, action) => {
             return {
                 ...state,
                 isAddingPost: false,
-                mainPosts: [dummyPost, ...state.mainPosts],
+                mainPosts: [action.data, ...state.mainPosts],
                 postAdded: true,
             }
         }
@@ -125,17 +105,17 @@ export default (state = initalState, action) => {
         case ADD_COMMENT_SUCCESS: {
             const postIndex = state.mainPosts.findIndex(v => v.id === action.data.postId);
             const post = state.mainPosts[postIndex];
-            const Comments = [...post.Comments, dummyComment];
+            const Comments = [...post.Comments, action.data.comment];
             const mainPosts = [...state.mainPosts];
             mainPosts[postIndex] = { ...post, Comments };
             return {
-              ...state,
-              isAddingComment: false,
-              mainPosts,
-              commentAdded: true,
+                ...state,
+                isAddingComment: false,
+                mainPosts,
+                commentAdded: true,
             };
-          }
-     
+        }
+
         case ADD_COMMENT_FAILURE: {
             return {
                 ...state,
@@ -145,7 +125,32 @@ export default (state = initalState, action) => {
             }
         }
 
-      
+        case LOAD_MAIN_POSTS_REQUEST:
+        case LOAD_HASHTAG_POSTS_REQUEST:
+        case LOAD_USER_POSTS_REQUEST: {
+            return {
+                ...state,
+                mainPosts: [],
+            }
+        }
+
+        case LOAD_MAIN_POSTS_SUCCESS:
+        case LOAD_HASHTAG_POSTS_SUCCESS:
+        case LOAD_USER_POSTS_SUCCESS: {
+            return {
+                ...state,
+                mainPosts: action.data,
+            }
+        }
+
+        case LOAD_MAIN_POSTS_FAILURE:
+        case LOAD_HASHTAG_POSTS_FAILURE:
+        case LOAD_USER_POSTS_FAILURE: {
+            return {
+                ...state,
+            }
+        }
+
         default: {
             return {
                 ...state

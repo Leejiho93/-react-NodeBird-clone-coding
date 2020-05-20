@@ -44,12 +44,12 @@ const Signup = () => {
         dispatch(({
             type: SIGN_UP_REQUEST,
             data: {
-                id,
+                userId: id,
                 password,
                 nickname
             }
         }))
-    }, [password, passwordCheck, term]);
+    }, [id, nickname, password, passwordCheck, term]);
 
     // const onChangeId = (e) => {
     //     setId(e.target.value);
@@ -66,7 +66,7 @@ const Signup = () => {
 
     const onChangePasswordCheck = useCallback((e) => {
         setPasswordError(e.target.value !== password);
-        console.log(`pass: ${password} , passchk ${e.target.value} `)
+        // console.log(`pass: ${password} , passchk ${e.target.value} `)
         setPasswordCheck(e.target.value);
     }, [password]);
 

@@ -9,7 +9,7 @@ import reducer from '../reducers';
 import createSagaMiddleware from 'redux-saga';
 import rootSaga from '../sagas';
 
-const NodeBird = ({ Component, store }) => {
+const NodeBird = ({ Component, store, pageProps }) => {
     return (
         <Provider store={store}>
             <Head>
@@ -17,7 +17,7 @@ const NodeBird = ({ Component, store }) => {
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/3.16.2/antd.css" />
             </Head>
             <AppLayout>
-                <Component />
+                <Component {...pageProps}/>
             </AppLayout>
         </Provider>
     )
@@ -26,7 +26,20 @@ const NodeBird = ({ Component, store }) => {
 NodeBird.propTypes = {
     Component: PropTypes.elementType.isRequired,
     store: PropTypes.object.isRequired,
+    pageProps: PropTypes.object.isRequired,
 };
+
+NodeBird.getInitialProps = async (context) => {
+    console.log('app.js context: ', context)
+    const { ctx, Component } = context;
+    let pageProps = {};
+    if (Component.getInitialProps) {
+        pageProps = await Component.getInitialProps(ctx);    // ctx 가 hashtag의 context로 이동
+    }
+    console.log('_app.js pageProps: ', pageProps)
+    return { pageProps };  // 컴포넌트의 props
+};
+
 const configureStore = (initialState, options) => {
     const sagaMiddleware = createSagaMiddleware();
     const middlewares = [sagaMiddleware];
