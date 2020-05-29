@@ -11,7 +11,13 @@ import {
     LOG_OUT_FAILURE,
     LOAD_USER_SUCCESS,
     LOAD_USER_FAILURE,
-    LOAD_USER_REQUEST} from '../reducers/user';
+    LOAD_USER_REQUEST,
+    FOLLOW_USER_SUCCESS,
+    FOLLOW_USER_REQUEST,
+    FOLLOW_USER_FAILURE,
+    UNFOLLOW_USER_SUCCESS,
+    UNFOLLOW_USER_FAILURE,
+    UNFOLLOW_USER_REQUEST} from '../reducers/user';
 import axios from 'axios';
 
 //프론트에있는 userId, password가 loginData에 담겨서 서버로 이동 (req.body.~~)
@@ -120,11 +126,65 @@ function* watchLoadUser() {
     yield takeLatest(LOAD_USER_REQUEST, loadUser);
 }
 
+function followAPI(userId) {
+    return axios.post(`/user/${userId}/follow`, {}, {
+        withCredentials: true
+    });
+}
+
+function* follow(action) {
+    try {
+        const result = yield call(followAPI, action.data)
+        yield put({
+            type: FOLLOW_USER_SUCCESS,
+            data: result.data,
+        })
+    } catch(e) {
+        console.error(e);
+        yield put({
+            type: FOLLOW_USER_FAILURE,
+            error: e,
+        })
+    }
+}
+
+function* watchFollow() {
+    yield takeLatest(FOLLOW_USER_REQUEST, follow);
+}
+
+function UnfollowAPI(userId) {
+    return axios.delete(`/user/${userId}/follow`, {
+        withCredentials: true
+    });
+}
+
+function* Unfollow(action) {
+    try {
+        const result = yield call(UnfollowAPI, action.data)
+        yield put({
+            type: UNFOLLOW_USER_SUCCESS,
+            data: result.data,
+        })
+    } catch(e) {
+        console.error(e);
+        yield put({
+            type: UNFOLLOW_USER_FAILURE,
+            error: e,
+        })
+    }
+}
+
+function* watchUnfollow() {
+    yield takeLatest(UNFOLLOW_USER_REQUEST, Unfollow);
+}
+
 export default function* userSaga() {
     yield all([
         fork(watchLogIn),
         fork(watchLogOut),
         fork(watchLoadUser),
+        fork(watchFollow),
+        fork(watchUnfollow),
         fork(watchSignUp),
     ]);
 }

@@ -13,6 +13,22 @@ router.get('/:tag', async (req, res, next) => {
             }, {
                 model: db.User,
                 attribute: ['id', 'nickname'],
+            }, {
+                model: db.Image
+            }, {
+                model: db.User,
+                through: 'Like',
+                as: 'Likers',
+                attributes: ['id'],
+            }, {
+                model: db.Post,
+                as: 'Retweet',
+                include: [{
+                    model: db.User,
+                    attributes: ['id', 'nickname'],
+                }, {
+                    mode: db.Image
+                }]
             }],
         })
         res.json(posts);

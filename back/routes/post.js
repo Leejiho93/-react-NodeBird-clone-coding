@@ -1,13 +1,30 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
 const db = require('../models');
+const { isLoggedIn } = require('./middleware');
 
 const router = express.Router();
 
-router.post('/', async (req, res, next) => {
+const upload = multer({
+    storage: multer.diskStorage({  //서버 하드에 저장하겠다.
+        destination(req, file, done) {
+            done(null, 'uploads')  // 서버에러, 성공했을때
+        },
+        filename(req, file, done) {
+            const ext = path.extname(file.originalname)
+            const basename = path.basename(file.originalname, ext); // 보노보노.png,  ext===.png, basename===보노보노
+            done(null, basename + new Date().valueOf() + ext)   // 서버에러, 성공했을때
+        }
+    }),
+    limits: { fileSize: 20 * 1024 * 1024 },
+});
+
+// post 는 이미지 path (text) 이기 떄문에 upload.none() 사용
+// 폼데이터 파일 -> req.file(s), 폼데이터 일반 값 -> req.body
+router.post('/', isLoggedIn, upload.none(), async (req, res, next) => {
     try {
-        console.log('routes/post start');
         const hashtags = req.body.content.match(/#[^\s]+/g);
-        console.log('routes/post hashtags: ', hashtags)
         const newPost = await db.Post.create({
             content: req.body.content,  // ex) '제로초 파이팅 #구독 #졸아요 눌러주세요
             UserId: req.user.id,
@@ -16,14 +33,28 @@ router.post('/', async (req, res, next) => {
             const result = await Promise.all(hashtags.map(tag => db.Hashtag.findOrCreate({ 
                 where: { name: tag.slice(1).toLowerCase() },
             })));
-            console.log('result: ', result);
             await newPost.addHashtags(result.map(r => r[0]));
         }
-
+        console.log('req.body.image', req.body.image )
+        if (req.body.image) { // 이미지 주소를 여러개 올리면 image: [주소1, 주소2]
+            if (Array.isArray(req.body.image)) {
+                const images = await Promise.all(req.body.image.map((image) => {
+                    return db.Image.create({ src: image});
+                }));
+                await newPost.addImages(images)
+            } else {  // 이미지 하나만 올리면 image: 주소1
+                const image = await db.Image.create({ src: req.body.image });
+                await newPost.addImage(image);
+            }
+        }
+     
         const fullPost = await db.Post.findOne({
             where: { id: newPost.id },
             include: [{
                 model: db.User,
+                attributes: ['id', 'nickname'],
+            }, {
+                model: db.Image,
             }],
         })
         res.json(fullPost);
@@ -33,19 +64,38 @@ router.post('/', async (req, res, next) => {
     }
 });
 
-router.post('/images', (req, res) => {
 
+// upload.array('image')  image 는 imageFormData.append('image', f) 와 일치
+router.post('/images', upload.array('image'), (req, res) => {
+    console.log('req.files', req.files)
+    res.json(req.files.map(v => v.filename));
 });
 
 router.get('/:id/comments', async (req, res, next) => {
-
+    try {
+        const post = await db.Post.findOne({ where: { id: req.params.id }});
+        if (!post) {
+            return res.status(404).send('포스트가 존재하지 않습니다.');
+        }
+        const comments = await db.Comment.findAll({
+            where: {
+                PostId: req.params.id,
+            },
+            order: [['createdAt', 'ASC']],
+            include: [{
+                model: db.User,
+                attributes: ['id', 'nickname'],
+            }]
+        });
+        return res.json(comments);
+    } catch(e) {
+        console.error(e);
+        return next(e);
+    }
 })
 
-router.post('/:id/comment', async (req, res, next) => {
+router.post('/:id/comment', isLoggedIn, async (req, res, next) => {
     try {
-        if (!req.user) {
-            return res.status(401).send('로그인이 필요합니다.');
-        }
         const post = await db.Post.findOne({ where: { id: req.params.id }});
         if (!post) {
             return res.status(404).send('포스트가 존재하지 않습니다.');
@@ -56,6 +106,100 @@ router.post('/:id/comment', async (req, res, next) => {
             content: req.body.content,
         });
         await post.addComment(newComment.id);
+        const comment = await db.Comment.findOne({
+            where: {
+                id: newComment.id,
+            },
+            include: [{
+                model: db.User,
+                attributes: ['id', 'nickname'],
+            }]
+        })
+        return res.json(comment);
+    } catch(e) {
+        console.error(e);
+        return next(e);
+    }
+});
+
+router.post('/:id/like', isLoggedIn, async (req, res, next) => {
+    try {
+        const post = await db.Post.findOne({ where: { id: req.params.id }})
+        if (!post) {
+            return res.status(404).send('포스트가 존재하지 않습니다.');
+        }
+        await post.addLiker(req.user.id);
+        res.json({ userId: req.user.id })
+    } catch(e) {
+        console.error(e);
+        next(e);
+    } 
+});
+
+router.delete('/:id/like', isLoggedIn, async (req, res, next) => {
+    try {
+        const post = await db.Post.findOne({ where: { id: req.params.id }})
+        if (!post) {
+            return res.status(404).send('포스트가 존재하지 않습니다.');
+        }
+        await post.removeLiker(req.user.id);
+        res.json({ userId: req.user.id })
+    } catch(e) {
+        console.error(e);
+        next(e);
+    } 
+});
+
+router.post('/:id/retweet', isLoggedIn, async (req, res, next) => {
+    try {
+        const post = await db.Post.findOne({ 
+            where: { id: req.params.id },
+            include: [{
+                model: db.Post,
+                as: 'Retweet',
+            }]
+        })
+        if (!post) {
+            return res.status(404).send('포스트가 존재하지 않습니다.');
+        }
+        if (req.user.id === post.UserId || (post.Retweet && post.Retweet.UserId === req.user.id)) {
+            return res.status(403).send('자신의 글은 리트윗 할 수 없습니다.');
+        }
+        const retweetTargetId = post.RetweetId || post.id;
+        const exPost = await db.Post.findOne({
+            where: {
+                UserId: req.user.id,
+                RetweetId: retweetTargetId,
+            },
+        });
+        if (exPost) {
+            return res.status(403).send('이미 리트윗 했습니다.')
+        }
+
+        const retweet = await db.Post.create({
+            UserId: req.user.id,
+            RetweetId: retweetTargetId,
+            content: 'retweet',
+        })
+
+        const retweetWithPrevPost = await db.Post.findOne({
+            where: { id: retweet.id},
+            include: [{
+                model: db.User,
+                attributes: ['id', 'nickname'],
+            }, {
+                model: db.Post,
+                as: 'Retweet',
+                include: [{
+                    model: db.User,
+                    attributes: ['id', 'nickname'],
+                }, {
+                    model: db.Image,
+                }]
+            }]
+        })
+
+        res.json(retweetWithPrevPost);
     } catch(e) {
         console.error(e);
         next(e);

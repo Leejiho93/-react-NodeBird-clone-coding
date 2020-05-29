@@ -2,16 +2,14 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const passport = require('passport')
 const db = require('../models');
+const { isLoggedIn } = require('./middleware');
 
 const router = express.Router();
 
  
 // API는 다른 서비스나 내 서비스의 기능을 실행할 수 있게 열어둔 창구
 // 프론트에서 요청보내면 이부분 실행
-router.get('/', (req, res) => {  // /api/user/    -> index.js에 userAPIRouter로 반복 줄이기
-    if (!req.user) {
-        return res.status(401).send('로그인이 필요합니다.');
-    }
+router.get('/', isLoggedIn, (req, res) => {  // /api/user/    -> index.js에 userAPIRouter로 반복 줄이기
     const user = Object.assign({}, req.user.toJSON());  //db에서 가져온 객체를 변형할 때는 toJSON 붙여야됨
     delete user.password;
     return res.json(req.user);
@@ -147,6 +145,13 @@ router.get('/:id/posts',async (req, res, next) => {
             include: [{
                 model: db.User,
                 attributes: ['id', 'nickname'],
+            }, {
+                model: db.Image,
+            }, {
+                model: db.User,
+                through: 'Like',
+                as: 'Likers',
+                attributes: ['id'],
             }]
         })
         res.json(posts);

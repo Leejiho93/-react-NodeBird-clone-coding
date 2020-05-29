@@ -9,7 +9,7 @@ module.exports = () => {
         passwordField: 'password'
     }, async (userId, password, done) => {  //프론트 (login -> saga) 에서 보낸 req.body.userId, req.body.password
         try {
-            const user = await db.User.findOne({ where: {userId}})
+            const user = await db.User.findOne({ where: {userId}}) 
             if (!user) {
                 return done(null, false, { reason: '존재하지 않는 사용자입니다.!'})
                 //첫번째 매개변수: 서버쪽 에러

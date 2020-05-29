@@ -20,6 +20,7 @@ db.sequelize.sync();  // model에 있는 db 연결
 passportConfig();
 
 app.use(morgan('dev'));  // 요청에 대한 log 보여줌 
+app.use('/', express.static('uploads'))  // 이미지 미리보기 (다른 서버에서 자유롭게 볼 수 있음) // uploads 경로를 / (루트)로
 app.use(express.json()); // req.body 쓸려면
 app.use(express.urlencoded({ extended: true })) // 요청의 본문을 req.body에 넣어줌
 app.use(cors({
