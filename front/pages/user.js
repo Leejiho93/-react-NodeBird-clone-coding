@@ -22,7 +22,7 @@ const User = ({ id }) => {
         });
     }, []);
 
-    console.log('userInfo:', userInfo)
+    // console.log('userInfo:', userInfo)
     return (
         <div>
             {userInfo
@@ -63,7 +63,7 @@ User.propTypes = {
 }
 
 User.getInitialProps = async (context) => {
-    console.log('User getInitialProps: ', context.query.id)
+    // console.log('User getInitialProps: ', context.query.id)
     return { id: parseInt(context.query.id, 10) }
     //컴포넌트의 props 전달 가능
     // retrun 값은 _app.js의 pageProps로 전달 

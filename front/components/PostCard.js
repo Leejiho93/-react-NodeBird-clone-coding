@@ -85,26 +85,26 @@ const PostCard = ({ post }) => {
         })
     }, [me && me.id, post && post.id])
 
-    const onFollow = useCallback(userId = () => {
+    const onFollow = useCallback(userId => () => {
         dispatch({
             type: FOLLOW_USER_REQUEST,
             data: userId,
         });
     }, []);
 
-    const onUnfollow = useCallback(userId = () => {
+    const onUnfollow = useCallback(userId => () => {
         dispatch({
             type: UNFOLLOW_USER_REQUEST,
             data: userId,
-        })
-    }, [])
+        });
+    }, []);
 
     return (
         <div>
             <Card key={+post.createAt}
                 cover={post.Images && post.Images[0] && <PostImages images={post.Images} />}
                 actions={[
-                    <Icon type="retweet" key="retweet" onClick={onRetweet} />,
+                    <Icon type="reteet" key="retweet" onClick={onRetweet} />,
                     <Icon
                         type="heart"
                         key="heart"

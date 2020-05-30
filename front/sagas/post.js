@@ -32,6 +32,8 @@ import {
     RETWEET_SUCCESS
 } from '../reducers/post';
 import axios from 'axios';
+import { ADD_POST_TO_ME } from '../reducers/user'
+ 
 
 function addPostAPI(postData) {
     return axios.post('/post', postData, {
@@ -42,9 +44,13 @@ function addPostAPI(postData) {
 function* addPost(action) {
     try {
         const result = yield call(addPostAPI, action.data);
-        yield put({
+        yield put({  // post reducer의 데이터를 수정
             type: ADD_POST_SUCCESS,
             data: result.data,
+        });
+        yield put({  // user reducer의 데이터를 수정
+            type: ADD_POST_TO_ME,
+            data: result.data.id,
         })
     } catch(e) {
         console.log(e);

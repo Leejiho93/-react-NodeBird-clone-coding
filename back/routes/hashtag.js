@@ -12,7 +12,7 @@ router.get('/:tag', async (req, res, next) => {
                 // 한글, 특수문자는 주소창에 쓸떄 URIComponent로 바뀌기 떄문에 decode 해줘야함
             }, {
                 model: db.User,
-                attribute: ['id', 'nickname'],
+                attributes: ['id', 'nickname'],
             }, {
                 model: db.Image
             }, {
@@ -27,7 +27,7 @@ router.get('/:tag', async (req, res, next) => {
                     model: db.User,
                     attributes: ['id', 'nickname'],
                 }, {
-                    mode: db.Image
+                    model: db.Image
                 }]
             }],
         })
@@ -37,5 +37,6 @@ router.get('/:tag', async (req, res, next) => {
         next(e);
     }
 });
+
 
 module.exports = router;

@@ -32,13 +32,13 @@ NodeBird.propTypes = {
 };
 
 NodeBird.getInitialProps = async (context) => {
-    console.log('app.js context: ', context)
+    // console.log('app.js context: ', context)
     const { ctx, Component } = context;
     let pageProps = {};
     if (Component.getInitialProps) {
         pageProps = await Component.getInitialProps(ctx);    // ctx 가 hashtag의 context로 이동
     }
-    console.log('_app.js pageProps: ', pageProps)
+    // console.log('_app.js pageProps: ', pageProps)
     return { pageProps };  // 컴포넌트의 props
 };
 

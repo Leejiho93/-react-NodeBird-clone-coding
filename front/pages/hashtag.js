@@ -5,7 +5,7 @@ import { LOAD_HASHTAG_POSTS_REQUEST } from '../reducers/post';
 import PostCard from '../components/PostCard';
 
 const Hashtag = ({ tag }) => {
-    console.log('tag: ',tag)
+    // console.log('tag: ',tag)
     const dispatch = useDispatch();
     const { mainPosts } = useSelector(state => state.post);
 
@@ -30,7 +30,7 @@ Hashtag.propTypes = {
 }
 
 Hashtag.getInitialProps = async (context) => {
-    console.log('hashtag.js hashtag getInitialProps: ', context.query.tag)
+    // console.log('hashtag.js hashtag getInitialProps: ', context.query.tag)
     return { tag : context.query.tag }  //
 }
 
