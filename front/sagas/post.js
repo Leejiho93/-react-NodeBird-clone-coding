@@ -1,4 +1,4 @@
-import { all, fork, takeLatest, put, delay, call } from 'redux-saga/effects'
+import { all, fork, takeLatest, put, throttle, call } from 'redux-saga/effects'
 import {
     ADD_POST_REQUEST,
     ADD_POST_SUCCESS,
@@ -29,10 +29,16 @@ import {
     UNLIKE_POST_REQUEST,
     RETWEET_REQUEST,
     RETWEET_FAILURE,
-    RETWEET_SUCCESS
+    RETWEET_SUCCESS,
+    REMOVE_POST_SUCCESS,
+    REMOVE_POST_FAILURE,
+    REMOVE_POST_REQUEST,
+    LOAD_POST_REQUEST,
+    LOAD_POST_FAILURE,
+    LOAD_POST_SUCCESS
 } from '../reducers/post';
 import axios from 'axios';
-import { ADD_POST_TO_ME } from '../reducers/user'
+import { ADD_POST_TO_ME, REMOVE_POST_OF_ME } from '../reducers/user'
  
 
 function addPostAPI(postData) {
@@ -53,7 +59,7 @@ function* addPost(action) {
             data: result.data.id,
         })
     } catch(e) {
-        console.log(e);
+        console.error(e);
         yield put({
             type: ADD_POST_FAILURE,
             error: e,
@@ -96,13 +102,13 @@ function* watchAddComment() {
 
 }
 
-function loadMainPostsAPI() {
-    return axios.get('/posts');
+function loadMainPostsAPI(lastId = 0, limit = 10) {
+    return axios.get(`/posts?lastId=${lastId}&limit=${limit}`);
 }
 
 function* loadMainPosts(action) {  // postCard -> dispatch -> data
     try {
-        const result = yield call(loadMainPostsAPI);
+        const result = yield call(loadMainPostsAPI, action.lastId);
         yield put({
             type: LOAD_MAIN_POSTS_SUCCESS,
             data: result.data
@@ -117,17 +123,17 @@ function* loadMainPosts(action) {  // postCard -> dispatch -> data
 }
 
 function* watchLoadMainPosts() {
-    yield takeLatest(LOAD_MAIN_POSTS_REQUEST, loadMainPosts);
+    yield throttle(2000, LOAD_MAIN_POSTS_REQUEST, loadMainPosts);
 
 }
 
-function loadHashtagPostsAPI(tag) {
-    return axios.get(`/hashtag/${tag}`);
+function loadHashtagPostsAPI(tag, lastId) {
+    return axios.get(`/hashtag/${encodeURIComponent(tag)}?lastId=${lastId}&limit=10`);
 }
 
 function* loadHashtagPosts(action) { 
     try {
-        const result = yield call(loadHashtagPostsAPI, action.data);
+        const result = yield call(loadHashtagPostsAPI, action.data, action.lastId);
         yield put({
             type: LOAD_HASHTAG_POSTS_SUCCESS,
             data: result.data
@@ -147,7 +153,7 @@ function* watchLoadHashtagPosts() {
 }
 
 function loadUserPostsAPI(id) {
-    return axios.get(`/user/${id}/posts`);
+    return axios.get(`/user/${id || 0}/posts`);
 }
 
 function* loadUserPosts(action) {  // postCard -> dispatch -> data
@@ -317,6 +323,62 @@ function* watchRetweet() {
 
 }
 
+function removePostAPI(postId) {
+    return axios.delete(`/post/${postId}`, {
+        withCredentials: true,
+    })
+}
+
+function* removePost(action) { 
+    try {
+        const result = yield call(removePostAPI, action.data)
+        yield put({
+            type: REMOVE_POST_SUCCESS,
+            data: result.data,
+        })
+        yield put({
+            type: REMOVE_POST_OF_ME,
+            data: result.data,
+        })
+    } catch (e) {
+        console.error(e);
+        yield put({
+            type: REMOVE_POST_FAILURE,
+            error: e,
+        });
+    }
+}
+
+function* watchRemovePost() {
+    yield takeLatest(REMOVE_POST_REQUEST, removePost);
+
+}
+
+function loadPostAPI(postId) {
+    return axios.get(`/post/${postId}`)
+}
+
+function* loadPost(action) { 
+    try {
+        const result = yield call(loadPostAPI, action.data)
+        yield put({
+            type: LOAD_POST_SUCCESS,
+            data: result.data,
+        })
+    } catch (e) {
+        console.error(e);
+        yield put({
+            type: LOAD_POST_FAILURE,
+            error: e,
+        });
+    }
+}
+
+function* watchLoadPost() {
+    yield takeLatest(LOAD_POST_REQUEST, loadPost);
+
+}
+
 export default function* postSaga() {
     yield all([
         fork(watchAddPost),
@@ -328,6 +390,8 @@ export default function* postSaga() {
         fork(watchUploadImages),
         fork(watchLikePost),
         fork(watchUnLikePost),
-        fork(watchRetweet)
+        fork(watchRetweet),
+        fork(watchRemovePost),
+        fork(watchLoadPost),
     ]);
 }

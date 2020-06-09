@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const db = require('../models');
-const { isLoggedIn } = require('./middleware');
+const { isLoggedIn, isPostExist } = require('./middleware');
 
 const router = express.Router();
 
@@ -71,12 +71,36 @@ router.post('/images', upload.array('image'), (req, res) => {
     res.json(req.files.map(v => v.filename));
 });
 
-router.get('/:id/comments', async (req, res, next) => {
+router.get('/:id', async(req, res, next) => {
     try {
-        const post = await db.Post.findOne({ where: { id: req.params.id }});
-        if (!post) {
-            return res.status(404).send('포스트가 존재하지 않습니다.');
-        }
+        const post = await db.Post.findOne({
+            where: { id: req.params.id },
+            include: [{
+                model: db.User,
+                attributes: ['id', 'nickname'],
+            }, {
+                model: db.Image,
+            }]
+        })
+        res.json(post);
+    } catch(e) {
+        console.error(e);
+        next(e);
+    }
+})
+
+router.delete('/:id', isLoggedIn, isPostExist, async(req, res, next) => {
+    try {
+        await db.Post.destroy({ where: { id: req.params.id }});
+        res.send(req.params.id);
+    } catch(e) {
+        console.error(e);
+        next(e);
+    }
+})
+
+router.get('/:id/comments', isPostExist, async (req, res, next) => {
+    try {
         const comments = await db.Comment.findAll({
             where: {
                 PostId: req.params.id,
@@ -94,12 +118,9 @@ router.get('/:id/comments', async (req, res, next) => {
     }
 })
 
-router.post('/:id/comment', isLoggedIn, async (req, res, next) => {
+router.post('/:id/comment', isLoggedIn, isPostExist, async (req, res, next) => {
     try {
         const post = await db.Post.findOne({ where: { id: req.params.id }});
-        if (!post) {
-            return res.status(404).send('포스트가 존재하지 않습니다.');
-        }
         const newComment = await db.Comment.create({
             PostId: post.id,
             UserId: req.user.id,
@@ -122,12 +143,9 @@ router.post('/:id/comment', isLoggedIn, async (req, res, next) => {
     }
 });
 
-router.post('/:id/like', isLoggedIn, async (req, res, next) => {
+router.post('/:id/like', isLoggedIn, isPostExist, async (req, res, next) => {
     try {
         const post = await db.Post.findOne({ where: { id: req.params.id }})
-        if (!post) {
-            return res.status(404).send('포스트가 존재하지 않습니다.');
-        }
         await post.addLiker(req.user.id);
         res.json({ userId: req.user.id })
     } catch(e) {
@@ -136,12 +154,9 @@ router.post('/:id/like', isLoggedIn, async (req, res, next) => {
     } 
 });
 
-router.delete('/:id/like', isLoggedIn, async (req, res, next) => {
+router.delete('/:id/like', isLoggedIn, isPostExist, async (req, res, next) => {
     try {
         const post = await db.Post.findOne({ where: { id: req.params.id }})
-        if (!post) {
-            return res.status(404).send('포스트가 존재하지 않습니다.');
-        }
         await post.removeLiker(req.user.id);
         res.json({ userId: req.user.id })
     } catch(e) {
@@ -150,7 +165,7 @@ router.delete('/:id/like', isLoggedIn, async (req, res, next) => {
     } 
 });
 
-router.post('/:id/retweet', isLoggedIn, async (req, res, next) => {
+router.post('/:id/retweet', isLoggedIn, isPostExist, async (req, res, next) => {
     try {
         const post = await db.Post.findOne({ 
             where: { id: req.params.id },
@@ -159,9 +174,6 @@ router.post('/:id/retweet', isLoggedIn, async (req, res, next) => {
                 as: 'Retweet',
             }]
         })
-        if (!post) {
-            return res.status(404).send('포스트가 존재하지 않습니다.');
-        }
         if (req.user.id === post.UserId || (post.Retweet && post.Retweet.UserId === req.user.id)) {
             return res.status(403).send('자신의 글은 리트윗 할 수 없습니다.');
         }
@@ -204,6 +216,8 @@ router.post('/:id/retweet', isLoggedIn, async (req, res, next) => {
         console.error(e);
         next(e);
     }
-})
+});
+
+
 
 module.exports = router;

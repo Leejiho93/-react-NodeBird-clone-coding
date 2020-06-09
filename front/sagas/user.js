@@ -113,8 +113,8 @@ function* watchLogOut() {
 //남의 정보 load
 function loadUserAPI(userId) {
     return axios.get(userId ? `/user/${userId}` : '/user/', {
-        withCredentials: true
-    });
+        withCredentials: true  // 클라이언트에서 axios로 요청보낼 때는 브라우저가 쿠키를 같이 동봉해줌
+    });  // 서버사이드 랜더링 일때는 브라우저가 없음.
 }
 
 function* loadUser(action) {
@@ -190,15 +190,15 @@ function* watchUnfollow() {
     yield takeLatest(UNFOLLOW_USER_REQUEST, Unfollow);
 }
 
-function loadFollowersAPI(userId) {
-    return axios.get(`/user/${userId}/followers`, {
+function loadFollowersAPI(userId, offset = 0, limit = 3) {
+    return axios.get(`/user/${userId || 0}/followers?offset=${offset}&limit=${limit}`, {
         withCredentials: true
     });
 }
 
 function* loadFollowers(action) {
     try {
-        const result = yield call(loadFollowersAPI, action.data)
+        const result = yield call(loadFollowersAPI, action.data, action.offset)
         yield put({
             type: LOAD_FOLLOWERS_SUCCESS,
             data: result.data,
@@ -216,15 +216,15 @@ function* watchLoadFollowers() {
     yield takeLatest(LOAD_FOLLOWERS_REQUEST, loadFollowers);
 }
 
-function loadFollowingsAPI(userId) {
-    return axios.get(`/user/${userId}/followings`, {
+function loadFollowingsAPI(userId, offset = 0, limit = 3) {
+    return axios.get(`/user/${userId || 0}/followings?offset=${offset}&limit=${limit}`, {
         withCredentials: true
     });
 }
 
 function* loadFollowings(action) {
     try {
-        const result = yield call(loadFollowingsAPI, action.data)
+        const result = yield call(loadFollowingsAPI, action.data, action.offset)
         yield put({
             type: LOAD_FOLLOWINGS_SUCCESS,
             data: result.data,
