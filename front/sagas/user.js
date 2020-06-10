@@ -50,6 +50,7 @@ function* logIn(action) {
         console.error(e);
         yield put({
             type: LOG_IN_FAILURE,
+            reason: e.response && e.response.data
         })
     }
 }
