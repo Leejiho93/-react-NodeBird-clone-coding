@@ -1,10 +1,10 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import PropTypes from 'prop-types';
 import AppLayout from '../components/AppLayout';
 import withRedux from 'next-redux-wrapper';
 import withReduxSaga from 'next-redux-saga'; // next용 redux-saga
 import { createStore, compose, applyMiddleware } from 'redux';
-import { Provider } from 'react-redux';
+import { Provider, useSelector } from 'react-redux';
 import reducer from '../reducers';
 import createSagaMiddleware from 'redux-saga';
 import rootSaga from '../sagas';

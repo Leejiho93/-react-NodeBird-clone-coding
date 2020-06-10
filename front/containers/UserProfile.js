@@ -2,7 +2,8 @@ import React, { useCallback } from 'react';
 import { Card, Avatar, Button } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { LOG_OUT_REQUEST } from '../reducers/user';
-import Link from 'next/link'
+import Link from 'next/link';
+import Router from 'next/router';
 
 
 const UserProfile = () => {
@@ -14,6 +15,14 @@ const UserProfile = () => {
             type: LOG_OUT_REQUEST
         });
     })
+
+    // useEffect(() => {
+    //     if (!me) {
+    //         alert('로그인 하지 않아 메인페이지로 이동합니다.')
+    //         Router.push('/') 
+    //     }
+
+    // }, me && me.id);
 
     return (
         <Card

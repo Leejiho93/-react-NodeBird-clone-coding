@@ -1,4 +1,4 @@
-import { all, fork, takeLatest, put, throttle, call } from 'redux-saga/effects'
+import { all, fork, takeLatest, put, throttle, call, takeEvery } from 'redux-saga/effects'
 import {
     ADD_POST_REQUEST,
     ADD_POST_SUCCESS,
@@ -152,13 +152,15 @@ function* watchLoadHashtagPosts() {
 
 }
 
-function loadUserPostsAPI(id) {
-    return axios.get(`/user/${id || 0}/posts`);
+function loadUserPostsAPI(id, lastId = 0, limit = 10) {
+    return axios.get(`/user/${id || 0}/posts?lastId=${lastId}&limit=${limit}`, {
+        withCredentials: true,
+    });
 }
 
 function* loadUserPosts(action) {  // postCard -> dispatch -> data
     try {
-        const result = yield call(loadUserPostsAPI, action.data);
+        const result = yield call(loadUserPostsAPI, action.data, action.lastId);
         yield put({
             type: LOAD_USER_POSTS_SUCCESS,
             data: result.data

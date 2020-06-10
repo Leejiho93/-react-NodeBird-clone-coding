@@ -33,7 +33,7 @@ router.post('/', async (req, res, next) => {
             userId: req.body.userId,
             password: hashedPassword,
         });
-        console.log(newUser);
+        // console.log(newUser);
         return res.status(200).json(newUser);
 
     } catch(e) {
@@ -45,11 +45,40 @@ router.post('/', async (req, res, next) => {
 
 });
 
+// router.get('/:id', async (req, res, next) => { // 남의 정보 가져오는 것 ex) /api/user/123
+//     try {
+//       const user = await db.User.findOne({
+//         where: { id: parseInt(req.params.id, 10) },
+//         include: [{
+//           model: db.Post,
+//           as: 'Posts',
+//           attributes: ['id'],
+//         }, {
+//           model: db.User,
+//           as: 'Followings',
+//           attributes: ['id'],
+//         }, {
+//           model: db.User,
+//           as: 'Followers',
+//           attributes: ['id'],
+//         }],
+//         attributes: ['id', 'nickname'],
+//       });
+//       const jsonUser = user.toJSON();
+//       jsonUser.Posts = jsonUser.Posts ? jsonUser.Posts.length : 0;
+//       jsonUser.Followings = jsonUser.Followings ? jsonUser.Followings.length : 0;
+//       jsonUser.Followers = jsonUser.Followers ? jsonUser.Followers.length : 0;
+//       res.json(jsonUser);
+//     } catch (e) {
+//       console.error(e);
+//       next(e);
+//     }
+//   });
 router.get('/:id', async (req, res, next) => { // 남의 정보 가져옴  ex) /3  -> id 3인 유저 정보 가져옴
     try {
         const user = await db.User.findOne({
             where: { id: parseInt(req.params.id, 10 )},
-            inlcude: [{
+            include: [{
                 model: db.Post,
                 as: 'Posts',
                 attributes: ['id'],
@@ -65,7 +94,8 @@ router.get('/:id', async (req, res, next) => { // 남의 정보 가져옴  ex) /
             attributes: ['id', 'nickname'],
         })
         const jsonUser = user.toJSON();
-        jsonUser.Posts = jsonUser.Posts ? jsonUser.Post.length : 0;
+        console.log('jsonUser:', jsonUser)
+        jsonUser.Posts = jsonUser.Posts ? jsonUser.Posts.length : 0;
         jsonUser.Followings = jsonUser.Followings ? jsonUser.Followings.length : 0;
         jsonUser.Followers = jsonUser.Followers ? jsonUser.Followers.length : 0;
         res.json(jsonUser);
@@ -200,11 +230,23 @@ router.delete('/:id/follow', async (req, res, next) => {
 
 router.get('/:id/posts',async (req, res, next) => {
     try {
-        const posts = await db.Post.findAll({
-            where: {
+        let where = {
+            UserId: parseInt(req.params.id, 10) || (req.user && req.user.id) || 0,
+            RetweetId: null,
+        };
+        console.log('parseInt(req.params.id, 10 :',parseInt(req.params.id, 10));
+        console.log('(req.user && req.user.id) :', (req.user && req.user.id) )
+        if (parseInt(req.query.lastId, 10)) {
+            where = {
                 UserId: parseInt(req.params.id, 10) || (req.user && req.user.id) || 0,
                 RetweetId: null,
-            },
+                id: {
+                    [db.Sequelize.Op.lt]: parseInt(req.query.lastId, 10),  // less than 
+                },   
+            }
+        }
+        const posts = await db.Post.findAll({
+            where,
             include: [{
                 model: db.User,
                 attributes: ['id', 'nickname'],
@@ -215,8 +257,11 @@ router.get('/:id/posts',async (req, res, next) => {
                 through: 'Like',
                 as: 'Likers',
                 attributes: ['id'],
-            }]
+            }],
+            order: [['createdAt', 'DESC']],
+            limit: parseInt(req.query.limit, 10),
         })
+        // console.log('posts: ', posts);
         res.json(posts);
     } catch(e) {
         console.error(e);

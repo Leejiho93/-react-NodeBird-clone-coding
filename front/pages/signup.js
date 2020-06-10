@@ -25,7 +25,7 @@ const Signup = () => {
     const [passwordError, setPasswordError] = useState(false);
     const [termError, setTermError] = useState(false);
     const dispatch = useDispatch();
-    const {me, isSigningUp } = useSelector(state => state.user)
+    const {me, isSigningUp, isSignedUp } = useSelector(state => state.user)
 
     useEffect(() => {
         if (me) {
@@ -33,6 +33,13 @@ const Signup = () => {
             Router.push('/')  //로그인하면 회원가입 페이지가 메인페이지로 바뀜
         }
     }, [me && me.id])
+
+    useEffect(() => {
+        if (isSignedUp) {
+            alert('회원가입 완료했습니다.');
+            Router.push('/')  //로그인하면 회원가입 페이지가 메인페이지로 바뀜
+        }
+    }, [isSignedUp])
 
     const onSubmit = useCallback((e) => {
         e.preventDefault();

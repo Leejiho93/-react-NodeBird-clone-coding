@@ -1,15 +1,51 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import NicknameEditForm from '../containers/NicknameEditForm';
 import { LOAD_FOLLOWERS_REQUEST, LOAD_FOLLOWINGS_REQUEST, UNFOLLOW_USER_REQUEST, REMOVE_FOLLOWER_REQUEST } from '../reducers/user';
 import { useDispatch, useSelector } from 'react-redux';
 import { LOAD_USER_POSTS_REQUEST } from '../reducers/post';
 import PostCard from '../containers/PostCard';
 import FollowList from '../components/FollowList';
+import Router from 'next/router';
 
 const Profile = () => {
     const dispatch = useDispatch();
-    const { mainPosts } = useSelector(state => state.post);
-    const { followingList, followerList, hasMoreFollower, hasMoreFollowing } = useSelector(state => state.user);
+    const { mainPosts, hasMorePost } = useSelector(state => state.post);
+    const { followingList, followerList, hasMoreFollower, hasMoreFollowing, me } = useSelector(state => state.user);
+    const countRef = useRef([]);
+
+    const onScroll = useCallback(() => {
+        // console.log(window.scrollY,  document.documentElement.clientHeight,  document.documentElement.scrollHeight)
+        // console.log(window.scrollY, document.documentElement.clientHeight, document.documentElement.scrollHeight);
+        // 스크롤 내린 거리, 화면 높이, 페이지 전체 높이
+        if (window.scrollY + document.documentElement.clientHeight > document.documentElement.scrollHeight - 300) {
+            if (hasMorePost) {
+                const lastId = mainPosts[mainPosts.length - 1].id;
+                if (!countRef.current.includes(lastId)) {
+                    dispatch({
+                        type: LOAD_USER_POSTS_REQUEST,
+                        lastId,
+                        id: me && me.id,
+                    });
+                    countRef.current.push(lastId)
+                }
+            }
+        }
+    }, [mainPosts.length, hasMorePost]);
+
+    // 인피니티 스크롤
+    useEffect(() => {
+        window.addEventListener('scroll', onScroll);
+        return () => {
+            window.removeEventListener('scroll', onScroll)
+        }
+    }, [mainPosts.length]);
+
+    useEffect(() => {
+        if (!me) {
+            alert('로그인 하지않아 메인페이지로 이동합니다.')
+            Router.push('/') 
+        }
+    }, [me && me.id])
 
     const onUnfollow = useCallback(userId => () => {
         dispatch({
