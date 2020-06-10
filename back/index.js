@@ -14,20 +14,35 @@ const postAPIRouter = require('./routes/post');
 const postsAPIRouter = require('./routes/posts');
 const hashtagAPIRouter = require('./routes/hashtag');
 
+const prod = process.env.NODE_ENV === 'production';
+
 dotenv.config();
 const app = express();
 db.sequelize.sync();  // model에 있는 db 연결
 passportConfig();
 
-app.use(morgan('dev'));  // 요청에 대한 log 보여줌 
+if (prod) {
+    app.use(hpp());
+    app.use(helmet());
+    app.use(morgan('combined'));
+    app.use(cors({
+        origin: 'http://easyhonodebird.com',
+        credentials: true,
+    }));
+
+} else {
+    app.use(morgan('dev'));  // 요청에 대한 log 보여줌 
+    app.use(cors({
+        // 프론트와 서버 쿠키 교환
+        origin: true,         
+        credentials: true, 
+    })); // 다른서버에서 요청와도 에러 안나옴
+}
+
+
 app.use('/', express.static('uploads'))  // 이미지 미리보기 (다른 서버에서 자유롭게 볼 수 있음) // uploads 경로를 / (루트)로
 app.use(express.json()); // req.body 쓸려면
 app.use(express.urlencoded({ extended: true })) // 요청의 본문을 req.body에 넣어줌
-app.use(cors({
-    // 프론트와 서버 쿠키 교환
-    origin: true,         
-    credentials: true, 
-})); // 다른서버에서 요청와도 에러 안나옴
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(expressSession({
     resave: false,   // 매번 세션 강제 저장
@@ -36,6 +51,7 @@ app.use(expressSession({
     cookie: {
         httpOnly: true, // 자바스크립트는 접근 불가능(보안)
         secure: false, //https를 쓸때 true
+        domain: prod && '.easyhonodebird.com', // 쿠키 api.easyhonodebird 와 easyhonodebird 모두 가능.
     },
     name: 'rnbck',
 }));
@@ -53,6 +69,6 @@ app.use('/api/post', postAPIRouter);
 app.use('/api/posts', postsAPIRouter);
 app.use('/api/hashtag', hashtagAPIRouter);
 
-app.listen(process.env.NODE_ENV === 'production' ? process.env.PORT : 3065, () => {
+app.listen(prod ? process.env.PORT : 3065, () => {
     console.log(`server is running on ${process.env.PORT}`);
 })
