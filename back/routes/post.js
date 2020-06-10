@@ -30,7 +30,7 @@ const upload = multer({
     // limits: { fileSize: 20 * 1024 * 1024 },
     storage: multerS3({  
         s3: new AWS.S3(),
-        bucket: easyhonodebird,
+        bucket: 'easyhonodebird',
         key(req, file, cb) {
             cb(null, `original/${+new Date()}${path.basename(file.originalname)}`);
         },
