@@ -44,6 +44,10 @@ app.use(expressSession({
 app.use(passport.initialize()); 
 app.use(passport.session());
 
+app.get('/', (req, res) => {
+    res.send('react nodebird 백엔드 정상 동작');
+});
+
 app.use('/api/user', userAPIRouter);
 app.use('/api/post', postAPIRouter);
 app.use('/api/posts', postsAPIRouter);
