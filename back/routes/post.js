@@ -9,7 +9,7 @@ const multerS3 = require('multer-s3');
 const router = express.Router();
 
 //aws 접근 config
-AWS.config.updata({
+AWS.config.update({
     region: 'ap-northeast-2',
     accessKeyId: process.env.S3_ACCESS_KEY_ID,
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
