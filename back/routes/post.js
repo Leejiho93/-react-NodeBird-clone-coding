@@ -3,19 +3,36 @@ const multer = require('multer');
 const path = require('path');
 const db = require('../models');
 const { isLoggedIn, isPostExist } = require('./middleware');
+const multerS3 = require('multer-s3');
 
 const router = express.Router();
 
+//aws 접근 config
+AWS.config.updata({
+    region: 'ap-northeast-2',
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+})
+
 const upload = multer({
-    storage: multer.diskStorage({  //서버 하드에 저장하겠다.
-        destination(req, file, done) {
-            done(null, 'uploads')  // 서버에러, 성공했을때
+     //서버 하드에 저장
+    // storage: multer.diskStorage({  //서버 하드에 저장하겠다.
+    //     destination(req, file, done) {
+    //         done(null, 'uploads')  // 서버에러, 성공했을때
+    //     },
+    //     filename(req, file, done) {
+    //         const ext = path.extname(file.originalname)
+    //         const basename = path.basename(file.originalname, ext); // 보노보노.png,  ext===.png, basename===보노보노
+    //         done(null, basename + new Date().valueOf() + ext)   // 서버에러, 성공했을때
+    //     }
+    // }),
+    // limits: { fileSize: 20 * 1024 * 1024 },
+    storage: multerS3({  
+        s3: new AWS.S3(),
+        bucket: easyhonodebird,
+        key(req, file, cb) {
+            cb(null, `original/${+new Date()}${path.basename(file.originalname)}`);
         },
-        filename(req, file, done) {
-            const ext = path.extname(file.originalname)
-            const basename = path.basename(file.originalname, ext); // 보노보노.png,  ext===.png, basename===보노보노
-            done(null, basename + new Date().valueOf() + ext)   // 서버에러, 성공했을때
-        }
     }),
     limits: { fileSize: 20 * 1024 * 1024 },
 });
@@ -68,7 +85,8 @@ router.post('/', isLoggedIn, upload.none(), async (req, res, next) => {
 // upload.array('image')  image 는 imageFormData.append('image', f) 와 일치
 router.post('/images', upload.array('image'), (req, res) => {
     // console.log('req.files', req.files)
-    res.json(req.files.map(v => v.filename));
+    // res.json(req.files.map(v => v.filename));  // diskStorage
+    res.json(req.files.map(v => v.location));
 });
 
 router.get('/:id', async(req, res, next) => {
