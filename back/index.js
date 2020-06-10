@@ -6,7 +6,8 @@ const cookieParser = require('cookie-parser');
 const expressSession = require('express-session');
 const dotenv = require('dotenv');
 const passport = require('passport');
-
+const hpp = require('hpp');
+const helmet = require('helmet');
 const passportConfig = require('./passport');
 const db = require('./models');
 const userAPIRouter = require('./routes/user');
