@@ -10,7 +10,8 @@ const router = express.Router();
 
 //aws 접근 config
 AWS.config.update({
-    region: 'ap-northeast-2',
+    // region: 'ap-northeast-2', //서울
+    region: 'us-east-2',
     accessKeyId: process.env.S3_ACCESS_KEY_ID,
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
 })
