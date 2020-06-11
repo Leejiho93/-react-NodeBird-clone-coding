@@ -5,3 +5,4 @@ back/.env
 front/.env
 back/node_modules
 react-nodebird.pem
+lambda/node_modules
