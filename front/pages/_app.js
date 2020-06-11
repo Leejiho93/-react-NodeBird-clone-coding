@@ -48,9 +48,12 @@ const NodeBird = ({ Component, store, pageProps }) => {
                     }, {
                         property: 'og:image', content: 'http://easyhonodebird.com/favicon.ico',
                     }]}
-                    link={[{
-                        rel: 'shortcut icon', href: '/favicon.ico',
-                    }, {
+                    link={[
+                    //     {
+                    //     rel: 'shortcut icon', href: '/favicon.ico',
+                    // }, 
+                    {
+                     
                         rel: 'stylesheet', href: "https://cdnjs.cloudflare.com/ajax/libs/antd/3.16.2/antd.css",
                     }, {
                         rel: 'stylesheet', href: "https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.6.0/slick-theme.min.css",
