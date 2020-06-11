@@ -27,7 +27,7 @@ if (prod) {
     app.use(helmet());
     app.use(morgan('combined'));
     app.use(cors({
-        origin: 'http://easyhonodebird.com',
+        origin: /easyhonodebird\.com$/,
         credentials: true,
     }));
 

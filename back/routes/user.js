@@ -94,7 +94,7 @@ router.get('/:id', async (req, res, next) => { // 남의 정보 가져옴  ex) /
             attributes: ['id', 'nickname'],
         })
         const jsonUser = user.toJSON();
-        console.log('jsonUser:', jsonUser)
+        // console.log('jsonUser:', jsonUser)
         jsonUser.Posts = jsonUser.Posts ? jsonUser.Posts.length : 0;
         jsonUser.Followings = jsonUser.Followings ? jsonUser.Followings.length : 0;
         jsonUser.Followers = jsonUser.Followers ? jsonUser.Followers.length : 0;
@@ -234,8 +234,8 @@ router.get('/:id/posts',async (req, res, next) => {
             UserId: parseInt(req.params.id, 10) || (req.user && req.user.id) || 0,
             RetweetId: null,
         };
-        console.log('parseInt(req.params.id, 10 :',parseInt(req.params.id, 10));
-        console.log('(req.user && req.user.id) :', (req.user && req.user.id) )
+        // console.log('parseInt(req.params.id, 10 :',parseInt(req.params.id, 10));
+        // console.log('(req.user && req.user.id) :', (req.user && req.user.id) )
         if (parseInt(req.query.lastId, 10)) {
             where = {
                 UserId: parseInt(req.params.id, 10) || (req.user && req.user.id) || 0,
