@@ -17,7 +17,7 @@ const PostImages = ( {images} ) => {
     if (images.length === 1) {
         return (
             <>
-            <img src={images[0].src} onClick={onZoom} />
+            <img src={images[0].src.replace(/original\//, 'thumb/')} onClick={onZoom} />
             {showImageZoom && <ImagesZoom images={images} onClose={onClose} />}
             </>
         );
@@ -26,8 +26,8 @@ const PostImages = ( {images} ) => {
         return (
             <>
             <div>
-                <img src={images[0].src} width="50%" onClick={onZoom}/>
-                <img src={images[1].src} width="50%" onClick={onZoom}/>
+                <img src={images[0].src.replace(/original\//, 'thumb/')} width="50%" onClick={onZoom}/>
+                <img src={images[1].src.replace(/original\//, 'thumb/')} width="50%" onClick={onZoom}/>
             </div>
             {showImageZoom && <ImagesZoom images={images} onClose={onClose}/>}
             </>
@@ -37,7 +37,7 @@ const PostImages = ( {images} ) => {
     return (
         <>
         <div>
-            <img src={images[0].src} onClick={onZoom}/>
+            <img src={images[0].src.replace(/original\//, 'thumb/')} onClick={onZoom}/>
             <div style={{ display: 'inline-block', width: '50%', textAlign: 'center', verticalAlign: 'middle'}} onClick={onZoom}>
                 <Icon type="plus" />
                 <br/>
